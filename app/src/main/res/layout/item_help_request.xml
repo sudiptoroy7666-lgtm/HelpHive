@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@color/white"
+    android:backgroundTint="@color/white"
+    >
+
+    <TextView
+        android:id="@+id/tvHelpTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Need help with groceries"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:id="@+id/tvHelpDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Can't go to the store, need someone to help with groceries"
+        android:textSize="14sp"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:id="@+id/tvTimestamp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nov 21, 2025 08:30 AM"
+        android:textSize="12sp"
+        android:textColor="@android:color/darker_gray" />
+
+</LinearLayout>

@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "822604426838",
+    "firebase_url": "https://help-hive-a3e91-default-rtdb.firebaseio.com",
+    "project_id": "help-hive-a3e91",
+    "storage_bucket": "help-hive-a3e91.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:822604426838:android:a8e6383daaf0d872ba15f7",
+        "android_client_info": {
+          "package_name": "com.example.helphive"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC37OwBDi22E7dTRRZ0DPJZg5GNfCAWaLM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

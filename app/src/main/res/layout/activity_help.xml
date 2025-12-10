@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Help Requests"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="10"
+
+        >
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:hint="Title"
+
+            android:layout_marginRight="10dp"
+
+            android:layout_weight="7"
+            >
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etHelpTitle"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:hint="Description"
+
+            android:layout_weight="3"
+
+            >
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etHelpDescription"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:maxLines="5" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+
+    </LinearLayout>
+
+
+
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    >
+
+    <Button
+        android:id="@+id/btnAddHelpRequest"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:text="Post Help Request"
+        android:layout_marginBottom="16dp"
+        android:layout_marginTop="10dp"
+        style="@style/Widget.Material3.Button" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:layout_width="50dp"
+        android:layout_height="40dp"
+        android:id="@+id/ivAddImage"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="20dp"
+
+        android:background="@drawable/photo_camera_24"
+        >
+
+
+    </androidx.appcompat.widget.AppCompatButton>
+</LinearLayout>
+
+
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Help Requests:"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvHelpRequests"
+        android:layout_width="match_parent"
+        android:background="@color/white"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+</LinearLayout>
