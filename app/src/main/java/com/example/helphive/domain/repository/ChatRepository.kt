@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 interface ChatRepository {
     suspend fun addChatMessage(message: ChatMessage): Result<String>
     suspend fun getChatMessages(requestId: String): Result<List<ChatMessage>>
-    suspend fun getChatConversations(userId: String): Result<List<ChatConversation>>
+    fun getChatConversations(userId: String): kotlinx.coroutines.flow.Flow<List<ChatConversation>>
     // Add this method
     fun observeChatMessages(requestId: String): kotlinx.coroutines.flow.Flow<Result<List<ChatMessage>>>
 }

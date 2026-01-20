@@ -1,12 +1,7 @@
 package com.example.helphive.di
 
-import com.example.helphive.core.utils.OfflineCacheManager
 import com.example.helphive.domain.repository.*
-import com.example.helphive.domain.repository.ChatRepositoryImpl
-import com.example.helphive.domain.repository.HelpRepositoryImpl
-import com.example.helphive.domain.repository.KindnessRepositoryImpl
-import com.example.helphive.domain.repository.MoodRepositoryImpl
-import com.example.helphive.domain.repository.UserRepositoryImpl
+import com.example.helphive.data.repository.*
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -44,12 +39,18 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindAuthRepository(
-        impl: com.example.helphive.data.repository.AuthRepositoryImpl
-    ): com.example.helphive.domain.repository.AuthRepository
+        impl: AuthRepositoryImpl
+    ): AuthRepository
 
     @Binds
     @Singleton
     abstract fun bindUserRepository(
-        impl: com.example.helphive.domain.repository.UserRepositoryImpl
-    ): com.example.helphive.domain.repository.UserRepository
+        impl: UserRepositoryImpl
+    ): UserRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAiRepository(
+        impl: AiRepositoryImpl
+    ): AiRepository
 }

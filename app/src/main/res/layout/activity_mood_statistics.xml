@@ -15,21 +15,41 @@
         android:gravity="center"
         android:layout_marginBottom="16dp" />
 
+    <!-- Summary TextViews -->
+    <TextView
+        android:id="@+id/tvTotalMoods"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Total Moods: "
+        android:textSize="16sp"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:id="@+id/tvMostCommonMood"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Most Common Mood: "
+        android:textSize="16sp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Chart -->
     <com.github.mikephil.charting.charts.BarChart
         android:id="@+id/barChart"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
 
+    <!-- Legend Header -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="=Moods:"
+        android:text="Mood Breakdown:"
         android:textSize="16sp"
         android:textStyle="bold"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp" />
 
+    <!-- Legend Container -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content">

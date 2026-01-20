@@ -1,3 +1,4 @@
+// File: com/example/helphive/di/GsonModule.kt (Ensure this file exists and is correct)
 package com.example.helphive.di
 
 import com.google.gson.Gson

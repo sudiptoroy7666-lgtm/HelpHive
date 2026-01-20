@@ -41,7 +41,8 @@ class ConversationActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        chatAdapter = ChatAdapter()
+        val currentUserId = authService.getCurrentUser()?.uid ?: ""
+        chatAdapter = ChatAdapter(currentUserId)
         binding.rvChatMessages.apply {
             layoutManager = LinearLayoutManager(this@ConversationActivity)
             adapter = chatAdapter

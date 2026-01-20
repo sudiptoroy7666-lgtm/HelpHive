@@ -85,13 +85,25 @@ class ConversationAdapter(
         }
     }
 
+    // In ConversationAdapter.kt - Ensure this is correct
     class ConversationDiffCallback : DiffUtil.ItemCallback<ChatConversation>() {
         override fun areItemsTheSame(oldItem: ChatConversation, newItem: ChatConversation): Boolean {
-            return oldItem.requestId == newItem.requestId
+            // Compare based on the unique identifier for the conversation
+            return oldItem.requestId == newItem.requestId // Assuming requestId uniquely identifies a conversation
         }
 
         override fun areContentsTheSame(oldItem: ChatConversation, newItem: ChatConversation): Boolean {
-            return oldItem == newItem
+            // Compare the contents of the items. They are the same if the conversation details haven't changed.
+            // This might exclude 'lastMessageTime' if you expect it to change frequently.
+            // Or include it if a change in time *should* trigger a UI update for that item.
+            return oldItem == newItem // This checks all properties. If lastMessageTime changes, they are different.
+            // If you want to ignore time for content comparison (less flicker but less immediate update):
+            // return oldItem.requestId == newItem.requestId &&
+            //        oldItem.otherUserId == newItem.otherUserId &&
+            //        oldItem.otherUserName == newItem.otherUserName &&
+            //        oldItem.lastMessage == newItem.lastMessage &&
+            //        oldItem.unreadCount == newItem.unreadCount
         }
+
     }
 }

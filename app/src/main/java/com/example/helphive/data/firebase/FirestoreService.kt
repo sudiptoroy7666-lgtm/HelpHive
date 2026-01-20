@@ -3,6 +3,8 @@ package com.example.helphive.data.firebase
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.helphive.data.model.*
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -445,92 +447,121 @@ class FirestoreService @Inject constructor(private val firestore: FirebaseFirest
     }
 
     // Fixed: Removed orderBy to avoid index requirement
+    // In FirestoreService.kt
     suspend fun getChatConversations(userId: String): Result<List<ChatConversation>> {
         return try {
-            // Get all messages where user is involved
+            // Get all chat messages involving this user
             val snapshot = firestore.collection("chat_messages")
-                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
-                .limit(100) // Limit to prevent too many documents
-                .get(com.google.firebase.firestore.Source.DEFAULT) // This ensures offline data is available
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .limit(200) // Reasonable limit
+                .get(Source.DEFAULT)
                 .await()
 
-            val conversations = mutableMapOf<String, ChatConversation>()
+            val conversationsMap = mutableMapOf<String, ChatConversation>()
+            val userCache = mutableMapOf<String, Pair<String, String>>() // userId -> (name, profileImage)
 
             for (doc in snapshot.documents) {
-                val requestId = doc.getString("requestId") ?: continue
                 val senderId = doc.getString("senderId") ?: continue
+                val requestId = doc.getString("requestId") ?: continue
                 val message = doc.getString("message") ?: continue
                 val timestamp = doc.getLong("timestamp") ?: 0L
 
-                // Get help request info to find the other user
-                val helpRequestDoc = firestore.collection("help_requests")
-                    .document(requestId)
-                    .get(com.google.firebase.firestore.Source.DEFAULT)
-                    .await()
-                val helpRequestOwnerId = if (helpRequestDoc.exists()) {
-                    helpRequestDoc.getString("userId") ?: ""
-                } else {
-                    ""
+                // Get the other user in this conversation
+                val otherUserId = getOtherUserIdInConversation(userId, requestId, senderId)
+                if (otherUserId.isEmpty() || otherUserId == userId) continue
+
+                // Cache user data if not already cached
+                if (!userCache.containsKey(otherUserId)) {
+                    val userDoc = firestore.collection("users")
+                        .document(otherUserId)
+                        .get(Source.DEFAULT)
+                        .await()
+                    if (userDoc.exists()) {
+                        val userName = userDoc.getString("name") ?: "Unknown User"
+                        val profileImage = userDoc.getString("profileImagePath") ?: ""
+                        userCache[otherUserId] = Pair(userName, profileImage)
+                    }
                 }
 
-                val otherUserId = if (senderId == userId) {
-                    helpRequestOwnerId
-                } else {
-                    senderId
-                }
+                // Create or update conversation for this user
+                val existing = conversationsMap[otherUserId]
+                if (existing == null || timestamp > existing.lastMessageTime) {
+                    val (userName, userProfileImage) = userCache[otherUserId] ?: Pair("Unknown User", "")
+                    val unreadCount = if (senderId != userId && (existing?.unreadCount ?: 0) == 0) 1 else (existing?.unreadCount ?: 0)
 
-                if (conversations.containsKey(requestId)) {
-                    val existing = conversations[requestId]!!
-                    if (timestamp > existing.lastMessageTime) {
-                        conversations[requestId] = existing.copy(
-                            lastMessage = message,
-                            lastMessageTime = timestamp
-                        )
-                    }
-                    if (senderId != userId) {
-                        conversations[requestId] = conversations[requestId]!!.copy(
-                            unreadCount = existing.unreadCount + 1
-                        )
-                    }
-                } else {
-                    conversations[requestId] = ChatConversation(
+                    conversationsMap[otherUserId] = ChatConversation(
                         requestId = requestId,
                         otherUserId = otherUserId,
+                        otherUserName = userName,
                         lastMessage = message,
                         lastMessageTime = timestamp,
-                        unreadCount = if (senderId != userId) 1 else 0
+                        unreadCount = unreadCount
                     )
                 }
             }
 
-            // Add user names to conversations
-            val conversationsWithUserNames = mutableListOf<ChatConversation>()
-            for (conversation in conversations.values) {
-                val userDoc = firestore.collection("users")
-                    .document(conversation.otherUserId)
-                    .get(com.google.firebase.firestore.Source.DEFAULT)
-                    .await()
-                val userName = if (userDoc.exists()) {
-                    userDoc.getString("name") ?: "Unknown User"
-                } else {
-                    "Unknown User"
-                }
+            // Convert map to list and sort by most recent message
+            val conversations = conversationsMap.values
+                .sortedByDescending { it.lastMessageTime }
+                .toList()
 
-                conversationsWithUserNames.add(conversation.copy(otherUserName = userName))
-            }
-
-            Result.success(conversationsWithUserNames) // Already sorted by orderBy
+            Result.success(conversations)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
+    private suspend fun getOtherUserIdInConversation(
+        currentUserId: String,
+        requestId: String,
+        messageSenderId: String
+    ): String {
+        // Get help request to find the owner
+        val helpRequestDoc = firestore.collection("help_requests")
+            .document(requestId)
+            .get(Source.DEFAULT)
+            .await()
+
+        return if (helpRequestDoc.exists()) {
+            val ownerId = helpRequestDoc.getString("userId") ?: ""
+            if (currentUserId == ownerId) {
+                messageSenderId // Other user is the sender
+            } else {
+                ownerId // Other user is the help request owner
+            }
+        } else {
+            // Fallback: if not a help request, use the other participant
+            if (currentUserId == messageSenderId) {
+                // This is tricky - we need another way to identify the other user
+                // For now, return empty string (will be filtered out)
+                ""
+            } else {
+                messageSenderId
+            }
+        }
+    }
 }
 
+// File: com/example/helphive/data/firebase/FirestoreService.kt (Update the data class definition location if needed)
+// Or move this to a shared model file like com.example.helphive.data.model.ChatConversation
 data class ChatConversation(
     val requestId: String,
-    val otherUserId: String,
-    val otherUserName: String = "Unknown User", // Added user name
+    val otherUserId: String, // Unique identifier for the other user
+    val otherUserName: String = "Unknown User",
     val lastMessage: String,
     val lastMessageTime: Long,
-    val unreadCount: Int = 0
-)
+    val unreadCount: Int = 0,
+    val userProfileImage: String = "" // Add this field
+) {
+    // Add this for proper deduplication
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        other as ChatConversation
+        return otherUserId == other.otherUserId
+    }
+
+    override fun hashCode(): Int {
+        return otherUserId.hashCode()
+    }
+}

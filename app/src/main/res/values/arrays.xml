@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="sad_messages">
+        <item>You\'re not alone in this. It\'s okay to feel down sometimes.</item>
+        <item>Take a deep breath. This feeling will pass.</item>
+        <item>You\'re stronger than you think. One step at a time.</item>
+        <item>It\'s okay to not be okay. Be gentle with yourself today.</item>
+        <item>Your feelings are valid. Tomorrow is a new day.</item>
+    </string-array>
+
+    <string-array name="angry_messages">
+        <item>Take a moment to breathe. You\'ve got this.</item>
+        <item>It\'s okay to feel angry. What matters is how you respond.</item>
+        <item>Step back, breathe deeply, and choose your next move wisely.</item>
+        <item>Your calm is your superpower. Find it again.</item>
+        <item>This feeling is temporary. You control your response.</item>
+    </string-array>
+
+    <string-array name="anxious_messages">
+        <item>You\'re safe right now. Focus on your breath.</item>
+        <item>This feeling will pass. You\'ve overcome anxiety before.</item>
+        <item>Ground yourself: 5 things you see, 4 you feel, 3 you hear, 2 you smell, 1 you taste.</item>
+        <item>You\'re stronger than your anxiety. Take it one breath at a time.</item>
+        <item>It\'s just a feeling. It can\'t hurt you. You\'re in control.</item>
+    </string-array>
+
+    <string-array name="neutral_messages">
+        <item>Remember to be kind to yourself today.</item>
+        <item>You\'re doing your best, and that\'s enough.</item>
+        <item>Take a moment to appreciate something small around you.</item>
+    </string-array>
+</resources>
