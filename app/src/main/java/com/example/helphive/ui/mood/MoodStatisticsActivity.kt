@@ -14,14 +14,17 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.example.helphive.core.utils.DateUtils
 import kotlinx.coroutines.launch
-import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.utils.ColorTemplate
+import com.github.mikephil.charting.animation.Easing
 import com.example.helphive.data.model.Mood
-import java.util.*
 
 @AndroidEntryPoint
 class MoodStatisticsActivity : AppCompatActivity() {
@@ -38,20 +41,40 @@ class MoodStatisticsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupChart()
-
         // Load all users' moods
         viewModel.loadAllUsersMoods()
-
         observeViewModel()
     }
 
     private fun setupChart() {
-        binding.barChart.description.isEnabled = false
-        binding.barChart.setDrawGridBackground(false)
-        binding.barChart.setTouchEnabled(true)
-        binding.barChart.isDragEnabled = true
-        binding.barChart.setScaleEnabled(true)
-        binding.barChart.setPinchZoom(false)
+        binding.barChart.apply {
+            description.isEnabled = false
+            setDrawGridBackground(false)
+            setTouchEnabled(true)
+            isDragEnabled = true
+            setScaleEnabled(true)
+            setPinchZoom(false)
+
+            // Configure X-axis
+            xAxis.apply {
+                position = XAxis.XAxisPosition.BOTTOM
+                setDrawGridLines(false)
+                granularity = 1f
+                textColor = Color.BLACK
+                // Value formatter will be set in updateChart
+            }
+
+            // Configure Y-axis
+            axisLeft.apply {
+                setDrawGridLines(true)
+                gridColor = Color.GRAY
+                textColor = Color.BLACK
+            }
+            axisRight.isEnabled = false // Disable right Y-axis
+
+            // General settings
+            legend.isEnabled = false // We use a custom legend
+        }
     }
 
     private fun observeViewModel() {
@@ -60,13 +83,48 @@ class MoodStatisticsActivity : AppCompatActivity() {
                 viewModel.uiState.collect { state ->
                     if (state.moods.isNotEmpty()) {
                         updateChart(state.moods)
+                    } else {
+                        // Handle empty state if needed
+                        binding.barChart.clear()
+                        binding.barChart.setNoDataText("No mood data available")
+                        binding.legendContainer.removeAllViews()
+                        binding.tvTotalMoods.text = "Total Moods Logged: 0"
+                        binding.tvMostCommonMood.text = "Most Common Mood: N/A"
                     }
                 }
             }
         }
     }
 
+    private fun updateSummaryStats(moods: List<Mood>) {
+        val totalMoods = moods.size
+        binding.tvTotalMoods.text = "Total Moods Logged: $totalMoods"
+
+        if (moods.isNotEmpty()) {
+            val moodCounts = moods.groupingBy { it.emoji }.eachCount()
+            val mostCommonMoodEntry = moodCounts.maxByOrNull { it.value }
+            if (mostCommonMoodEntry != null) {
+                binding.tvMostCommonMood.text = "Most Common Mood: ${mostCommonMoodEntry.key} (Count: ${mostCommonMoodEntry.value})"
+            } else {
+                binding.tvMostCommonMood.text = "Most Common Mood: N/A"
+            }
+
+            // Optional: Add date range
+            val sortedMoods = moods.sortedBy { it.timestamp }
+            if (sortedMoods.size >= 2) {
+                val startDate = DateUtils.formatTimestamp(sortedMoods.first().timestamp)
+                val endDate = DateUtils.formatTimestamp(sortedMoods.last().timestamp)
+                // Add another TextView or append to existing one if desired
+                // e.g., binding.tvDateRange.text = "Date Range: $startDate - $endDate"
+            }
+        } else {
+            binding.tvMostCommonMood.text = "Most Common Mood: N/A"
+        }
+    }
+
     private fun updateChart(moods: List<Mood>) {
+        updateSummaryStats(moods) // Call summary first
+
         // Count moods by emoji across all users
         val moodCountMap = mutableMapOf<String, Int>()
         moods.forEach { mood ->
@@ -74,48 +132,61 @@ class MoodStatisticsActivity : AppCompatActivity() {
             moodCountMap[mood.emoji] = count + 1
         }
 
+        if (moodCountMap.isEmpty()) {
+            binding.barChart.clear()
+            binding.barChart.setNoDataText("No mood data available")
+            binding.legendContainer.removeAllViews()
+            return
+        }
+
+        // Sort by count descending for better visualization
+        val sortedMoodCounts = moodCountMap.toList().sortedByDescending { it.second }
+
         // Create entries for the chart
         val entries = mutableListOf<BarEntry>()
         val labels = mutableListOf<String>()
-        val colors = mutableListOf<Int>()
+        var colors = mutableListOf<Int>()
 
         var index = 0f
-        moodCountMap.forEach { (emoji, count) ->
+        sortedMoodCounts.forEach { (emoji, count) ->
             entries.add(BarEntry(index, count.toFloat()))
-            labels.add(emoji) // Store emoji for x-axis labels
-            // Use a specific color from the template based on index
-            val colorIndex = index.toInt() % ColorTemplate.COLORFUL_COLORS.size
+            labels.add(emoji)
+            val colorIndex = (index % ColorTemplate.COLORFUL_COLORS.size).toInt()
             colors.add(ColorTemplate.COLORFUL_COLORS[colorIndex])
             index++
         }
 
         val dataSet = BarDataSet(entries, "Mood Count")
-        dataSet.colors = colors
-        dataSet.valueTextSize = 12f
+        dataSet.apply {
+            colors = colors
+            valueTextSize = 14f
+            valueTextColor = Color.BLACK
+            // setDrawValues(false) // Uncomment if you don't want count numbers on bars
+        }
 
         // Set x-axis labels
         val xAxis = binding.barChart.xAxis
-        xAxis.valueFormatter = object : com.github.mikephil.charting.formatter.IndexAxisValueFormatter(labels) {
+        xAxis.valueFormatter = object : ValueFormatter() {
             override fun getFormattedValue(value: Float): String {
-                return if (value >= 0 && value < labels.size) labels[value.toInt()] else ""
+                val index = value.toInt()
+                return if (index >= 0 && index < labels.size) labels[index] else ""
             }
         }
-        xAxis.position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
-        xAxis.granularity = 1f
 
         val barData = BarData(dataSet)
         binding.barChart.data = barData
+        binding.barChart.animateY(2000, Easing.EaseInOutCubic)
         binding.barChart.invalidate()
 
-        // Add legend showing emoji-color mapping
-        setupLegend(moodCountMap, colors)
+        // Update custom legend
+        setupLegend(sortedMoodCounts.toMap(), colors) // Pass the sorted map and colors
     }
 
     private fun setupLegend(moodCountMap: Map<String, Int>, colors: List<Int>) {
-        // Clear previous legend items
         binding.legendContainer.removeAllViews()
 
         var index = 0
+        // Iterate through the sorted map to ensure legend order matches chart
         moodCountMap.forEach { (emoji, count) ->
             val legendItem = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -133,6 +204,7 @@ class MoodStatisticsActivity : AppCompatActivity() {
             val text = TextView(this).apply {
                 text = "$emoji - Count: $count"
                 setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 14f)
+                setTextColor(Color.BLACK)
             }
 
             legendItem.addView(colorBox)

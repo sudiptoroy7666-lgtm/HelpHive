@@ -3,6 +3,7 @@ package com.example.helphive.ui.chat
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -56,8 +57,13 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun observeViewModel() {
+        // Collect StateFlow in a coroutine
         lifecycleScope.launch {
             viewModel.conversationsState.collectLatest { state ->
+                // Show/hide loading indicator based on state.isLoading
+                // Assuming you have a ProgressBar in your layout with id 'progressBar'
+                // binding.progressBar.visibility = if (state.isLoading) android.view.View.VISIBLE else android.view.View.GONE
+
                 conversationAdapter.submitList(state.conversations)
 
                 state.error?.let {

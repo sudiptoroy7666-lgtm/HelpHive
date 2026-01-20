@@ -50,6 +50,16 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // File: com/example/helphive/MainApplication.kt
+
+            val db = FirebaseFirestore.getInstance()
+            db.firestoreSettings = firestoreSettings {
+                isPersistenceEnabled = true
+                cacheSizeBytes = FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED // This is good
+
+            // ...
+        }
+
         // Check if user is logged in
         if (!authService.isUserLoggedIn()) {
             startActivity(Intent(this, AuthActivity::class.java))

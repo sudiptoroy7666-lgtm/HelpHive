@@ -8,25 +8,59 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.helphive.core.utils.DateUtils
 import com.example.helphive.data.model.ChatMessage
-import com.example.helphive.databinding.ItemChatMessageBinding
+import com.example.helphive.databinding.ItemChatMessageSentBinding
+import com.example.helphive.databinding.ItemChatMessageReceivedBinding
 
-class ChatAdapter : ListAdapter<ChatMessage, ChatAdapter.ChatViewHolder>(ChatDiffCallback()) {
+class ChatAdapter(private val currentUserId: String) : ListAdapter<ChatMessage, RecyclerView.ViewHolder>(ChatDiffCallback()) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatViewHolder {
-        val binding = ItemChatMessageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return ChatViewHolder(binding)
+    companion object {
+        private const val VIEW_TYPE_SENT = 1
+        private const val VIEW_TYPE_RECEIVED = 2
     }
 
-    override fun onBindViewHolder(holder: ChatViewHolder, position: Int) {
-        holder.bind(getItem(position))
+    override fun getItemViewType(position: Int): Int {
+        return if (getItem(position).senderId == currentUserId) {
+            VIEW_TYPE_SENT
+        } else {
+            VIEW_TYPE_RECEIVED
+        }
     }
 
-    class ChatViewHolder(private val binding: ItemChatMessageBinding) : RecyclerView.ViewHolder(binding.root) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
+        return when (viewType) {
+            VIEW_TYPE_SENT -> {
+                val binding = ItemChatMessageSentBinding.inflate(inflater, parent, false)
+                SentViewHolder(binding)
+            }
+            else -> {
+                val binding = ItemChatMessageReceivedBinding.inflate(inflater, parent, false)
+                ReceivedViewHolder(binding)
+            }
+        }
+    }
 
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val message = getItem(position)
+        when (holder) {
+            is SentViewHolder -> holder.bind(message)
+            is ReceivedViewHolder -> holder.bind(message)
+        }
+    }
+
+    class SentViewHolder(private val binding: ItemChatMessageSentBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(message: ChatMessage) {
             binding.apply {
                 tvMessage.text = message.message
-                // ✅ FIXED: Use proper chat timestamp formatter
+                tvTime.text = DateUtils.formatChatTimestamp(message.timestamp)
+            }
+        }
+    }
+
+    class ReceivedViewHolder(private val binding: ItemChatMessageReceivedBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(message: ChatMessage) {
+            binding.apply {
+                tvMessage.text = message.message
                 tvTime.text = DateUtils.formatChatTimestamp(message.timestamp)
             }
         }

@@ -7,5 +7,5 @@ import javax.inject.Inject
 class GetChatConversationsUseCase @Inject constructor(
     private val chatRepository: ChatRepository
 ) {
-    suspend operator fun invoke(userId: String) = chatRepository.getChatConversations(userId)
+    operator fun invoke(userId: String) = chatRepository.getChatConversations(userId)
 }

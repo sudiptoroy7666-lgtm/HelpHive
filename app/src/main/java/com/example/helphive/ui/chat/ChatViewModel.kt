@@ -21,21 +21,16 @@ class ChatViewModel @Inject constructor(
 
     fun loadChatConversations(userId: String) {
         viewModelScope.launch {
-            // Don't show loading if we have cached data (for immediate UI)
             _conversationsState.value = _conversationsState.value.copy(isLoading = true)
 
-            getChatConversationsUseCase(userId).onSuccess { conversations ->
-                _conversationsState.value = _conversationsState.value.copy(
-                    conversations = conversations,
-                    isLoading = false,
-                    error = null
-                )
-            }.onFailure { exception ->
-                _conversationsState.value = _conversationsState.value.copy(
-                    isLoading = false,
-                    error = exception.message
-                )
-            }
+            getChatConversationsUseCase(userId)
+                .collect { conversations ->
+                    _conversationsState.value = _conversationsState.value.copy(
+                        conversations = conversations,
+                        isLoading = false,
+                        error = null
+                    )
+                }
         }
     }
 }
